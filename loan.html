@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>LendSwift — Loan Application</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,sans-serif;background:#f5f5f3;min-height:100vh;color:#1a1a1a}
+:root{--blue:#185FA5;--blue-light:#E6F1FB;--blue-mid:#378ADD;--green:#3B6D11;--green-light:#EAF3DE;--red:#A32D2D;--red-light:#FCEBEB;--amber:#854F0B;--amber-light:#FAEEDA;--gray:#5F5E5A;--gray-light:#F1EFE8;--teal:#0F6E56;--teal-light:#E1F5EE;--radius:8px;--radius-lg:12px}
+.app{max-width:780px;margin:0 auto;padding:1.5rem 1rem}
+.header{display:flex;align-items:center;gap:12px;margin-bottom:1.5rem}
+.logo{width:40px;height:40px;border-radius:10px;background:var(--blue);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:18px;flex-shrink:0}
+.header h1{font-size:20px;font-weight:500;color:#1a1a1a}
+.header p{font-size:13px;color:#666;margin-top:2px}
+.stepper{display:flex;align-items:center;gap:0;margin-bottom:1.5rem;overflow-x:auto;padding-bottom:4px}
+.step-item{display:flex;align-items:center;gap:0;flex-shrink:0}
+.step-circle{width:28px;height:28px;border-radius:50%;border:1.5px solid #ccc;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;background:#fff;color:#666;transition:all 0.2s;cursor:pointer}
+.step-circle.active{background:var(--blue);border-color:var(--blue);color:#fff}
+.step-circle.done{background:var(--green-light);border-color:var(--green);color:var(--green)}
+.step-label{font-size:10px;color:#999;text-align:center;margin-top:3px;max-width:56px;line-height:1.3}
+.step-label.active{color:var(--blue);font-weight:500}
+.step-label.done{color:var(--green)}
+.step-col{display:flex;flex-direction:column;align-items:center}
+.step-line{width:20px;height:1.5px;background:#ddd;margin-bottom:18px}
+.step-line.done{background:var(--green)}
+.card{background:#fff;border:0.5px solid #ddd;border-radius:var(--radius-lg);padding:1.5rem;margin-bottom:1rem}
+.card-title{font-size:16px;font-weight:500;margin-bottom:4px}
+.card-sub{font-size:13px;color:#666;margin-bottom:1.25rem}
+.row{display:grid;gap:14px;margin-bottom:14px}
+.row-2{grid-template-columns:1fr 1fr}
+.row-3{grid-template-columns:1fr 1fr 1fr}
+@media(max-width:540px){.row-2,.row-3{grid-template-columns:1fr}}
+.field{display:flex;flex-direction:column;gap:5px}
+.field label{font-size:13px;font-weight:500;color:#1a1a1a}
+.field .req{color:var(--red);margin-left:2px}
+.field input,.field select,.field textarea{padding:8px 12px;border:0.5px solid #ccc;border-radius:var(--radius);font-size:14px;background:#fff;color:#1a1a1a;width:100%;transition:border 0.15s;outline:none;font-family:inherit}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--blue-mid);box-shadow:0 0 0 3px rgba(55,138,221,0.12)}
+.field input.err,.field select.err{border-color:var(--red)}
+.field .err-msg{font-size:12px;color:var(--red)}
+.field .ok-msg{font-size:12px;color:var(--green);display:flex;align-items:center;gap:4px}
+.verify-row{display:flex;gap:8px;align-items:flex-end}
+.verify-row input{flex:1}
+.btn-verify{padding:8px 14px;border:0.5px solid var(--blue);border-radius:var(--radius);background:var(--blue-light);color:var(--blue);font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;transition:all 0.15s}
+.btn-verify:hover{background:var(--blue);color:#fff}
+.btn-verify.loading{opacity:0.6;cursor:not-allowed}
+.loan-type-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:1rem}
+.loan-card{border:1.5px solid #ddd;border-radius:var(--radius-lg);padding:1rem;cursor:pointer;transition:all 0.2s;text-align:center;background:#fff}
+.loan-card:hover{border-color:var(--blue-mid)}
+.loan-card.selected{border-color:var(--blue);background:var(--blue-light)}
+.loan-card .lc-icon{font-size:28px;margin-bottom:6px}
+.loan-card .lc-name{font-size:13px;font-weight:500;margin-bottom:3px}
+.loan-card .lc-desc{font-size:11px;color:#666}
+.range-wrap{padding:4px 0}
+.range-val{display:flex;justify-content:space-between;font-size:12px;color:#666;margin-top:4px}
+input[type=range]{width:100%;accent-color:var(--blue)}
+.upload-zone{border:1.5px dashed #ccc;border-radius:var(--radius-lg);padding:1.5rem;text-align:center;cursor:pointer;transition:all 0.2s;position:relative}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--blue-mid);background:var(--blue-light)}
+.upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.upload-zone p{font-size:13px;color:#666;margin-top:6px}
+.upload-zone .uz-icon{font-size:24px;color:var(--gray)}
+.doc-list{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.doc-item{display:flex;align-items:center;gap:10px;padding:8px 12px;background:#f9f9f9;border-radius:var(--radius);border:0.5px solid #eee}
+.doc-item img{width:36px;height:36px;object-fit:cover;border-radius:4px;border:0.5px solid #eee}
+.doc-item .di-info{flex:1;min-width:0}
+.doc-item .di-name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.doc-item .di-size{font-size:11px;color:#666}
+.doc-item .di-del{background:none;border:none;cursor:pointer;color:var(--gray);padding:4px;border-radius:4px;font-size:16px;line-height:1}
+.doc-item .di-del:hover{color:var(--red);background:var(--red-light)}
+.sig-area{border:0.5px solid #ccc;border-radius:var(--radius-lg);overflow:hidden;cursor:crosshair;background:#fff;display:block}
+.sig-toolbar{display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap}
+.sig-btn{padding:6px 12px;border:0.5px solid #ccc;border-radius:var(--radius);background:#fff;font-size:12px;cursor:pointer;transition:all 0.15s}
+.sig-btn:hover{background:#f5f5f5}
+.color-dot{width:18px;height:18px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:all 0.15s}
+.color-dot.active{border-color:var(--blue)}
+.checkbox-row{display:flex;align-items:flex-start;gap:10px;padding:10px;background:#f9f9f9;border-radius:var(--radius);margin-bottom:8px}
+.checkbox-row input[type=checkbox]{width:16px;height:16px;margin-top:2px;flex-shrink:0;accent-color:var(--blue)}
+.checkbox-row label{font-size:13px;color:#1a1a1a;cursor:pointer;line-height:1.5}
+.summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:1rem}
+.sum-item{background:#f5f5f5;border-radius:var(--radius);padding:10px 14px}
+.sum-item .si-label{font-size:11px;color:#666;margin-bottom:4px}
+.sum-item .si-val{font-size:15px;font-weight:500}
+.approval-banner{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:var(--radius-lg);margin-bottom:1rem}
+.approval-banner.approved{background:var(--green-light);border:0.5px solid var(--green)}
+.approval-banner.review{background:var(--amber-light);border:0.5px solid var(--amber)}
+.approval-banner .ab-icon{font-size:24px}
+.approval-banner .ab-text h3{font-size:14px;font-weight:500}
+.approval-banner .ab-text p{font-size:12px;color:#666;margin-top:2px}
+.emi-box{background:var(--blue-light);border:0.5px solid var(--blue-mid);border-radius:var(--radius-lg);padding:1rem;text-align:center;margin:1rem 0}
+.emi-box .emi-amt{font-size:28px;font-weight:500;color:var(--blue)}
+.emi-box .emi-label{font-size:13px;color:var(--gray);margin-top:3px}
+.nav-bar{display:flex;justify-content:space-between;align-items:center;margin-top:1rem}
+.btn-back{padding:9px 18px;border:0.5px solid #ccc;border-radius:var(--radius);background:#fff;font-size:14px;cursor:pointer;color:#1a1a1a;transition:all 0.15s}
+.btn-back:hover{background:#f5f5f5}
+.btn-next{padding:9px 22px;border:none;border-radius:var(--radius);background:var(--blue);color:#fff;font-size:14px;font-weight:500;cursor:pointer;transition:all 0.15s}
+.btn-next:hover{background:#144f8a}
+.btn-next:disabled{opacity:0.5;cursor:not-allowed}
+.btn-submit{padding:11px 28px;border:none;border-radius:var(--radius);background:var(--green);color:#fff;font-size:15px;font-weight:500;cursor:pointer;transition:all 0.15s}
+.btn-submit:hover{background:#2d5809}
+.autosave-bar{display:flex;align-items:center;gap:6px;font-size:12px;color:#999;margin-bottom:12px}
+.autosave-dot{width:7px;height:7px;border-radius:50%;background:var(--green)}
+.autosave-dot.saving{background:var(--amber)}
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500}
+.badge-blue{background:var(--blue-light);color:var(--blue)}
+.badge-green{background:var(--green-light);color:var(--green)}
+.progress-bar{height:3px;background:#eee;border-radius:3px;margin-bottom:1rem;overflow:hidden}
+.progress-fill{height:100%;background:var(--blue);border-radius:3px;transition:width 0.4s}
+.divider{height:0.5px;background:#eee;margin:1rem 0}
+.tag-list{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.tag{padding:4px 10px;background:var(--gray-light);border-radius:20px;font-size:12px;color:var(--gray)}
+.addr-suggest{position:absolute;z-index:10;top:100%;left:0;right:0;background:#fff;border:0.5px solid #ccc;border-radius:var(--radius);overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.08)}
+.addr-item{padding:9px 12px;font-size:13px;cursor:pointer;border-bottom:0.5px solid #eee}
+.addr-item:last-child{border-bottom:none}
+.addr-item:hover{background:#f5f5f5}
+.field .field-wrap{position:relative}
+.toast{position:fixed;bottom:20px;right:20px;background:#222;color:#fff;padding:10px 16px;border-radius:var(--radius);font-size:13px;z-index:999;opacity:0;transition:opacity 0.3s;pointer-events:none}
+.toast.show{opacity:1}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(0,0,0,0.1);border-top-color:var(--blue);border-radius:50%;animation:spin 0.7s linear infinite;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="app" id="root"></div>
+<div class="toast" id="toast"></div>
+<script>
+const STEPS=[{id:'loan-type',label:'Loan type'},{id:'personal',label:'Personal'},{id:'address',label:'Address'},{id:'employment',label:'Employment'},{id:'loan-details',label:'Loan details'},{id:'documents',label:'Documents'},{id:'signature',label:'Signature'},{id:'review',label:'Review'}];
+const ADDRESSES=['12, MG Road, Kanpur, UP 208001','45, Civil Lines, Allahabad, UP 211001','78, Ashok Nagar, Lucknow, UP 226001','3, Srinagar Colony, Varanasi, UP 221005','9, Raja Bazar, Patna, Bihar 800014','22, Koramangala, Bengaluru, KA 560034','101, Andheri West, Mumbai, MH 400058'];
+let state={step:0,loanType:'',pan:'',panVerified:false,aadhaar:'',aadhaarVerified:false,firstName:'',lastName:'',dob:'',gender:'',mobile:'',email:'',address:'',city:'',state_:'',pincode:'',sameAddress:true,permAddress:'',empType:'',company:'',designation:'',monthlyIncome:'',experience:'',businessName:'',businessType:'',businessVintage:'',turnover:'',propValue:'',propType:'',downPayment:'',loanAmount:500000,tenure:24,purpose:'',docs:[],sigData:'',consents:{terms:false,bureau:false,comm:false},savedAt:null,saving:false,addrSuggestions:[],showAddrSug:false,panVerifying:false,aadhaarVerifying:false,errors:{},submitted:false,sigColor:'#185FA5',sigSize:2};
+let sigCanvas,sigCtx,drawing=false;
+function fmt(n){return '₹'+Number(n).toLocaleString('en-IN')}
+function calcEMI(p,r,n){const mr=r/12/100;return mr===0?Math.round(p/n):Math.round(p*mr*Math.pow(1+mr,n)/(Math.pow(1+mr,n)-1))}
+function emiRate(){return state.loanType==='Home'?8.5:state.loanType==='Business'?13:11}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;')}
+function saveProgress(){state.saving=true;render();setTimeout(()=>{state.savedAt=new Date();state.saving=false;render();},900)}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500)}
+function validateStep(s){
+  const e={};
+  if(s===0&&!state.loanType)e.loanType='Select a loan type';
+  if(s===1){
+    if(!state.pan.match(/^[A-Z]{5}[0-9]{4}[A-Z]$/))e.pan='Enter valid PAN (e.g. ABCDE1234F)';
+    if(!state.panVerified)e.panV='Verify PAN first';
+    if(!state.aadhaar.match(/^\d{12}$/))e.aadhaar='Enter 12-digit Aadhaar';
+    if(!state.aadhaarVerified)e.aadhaarV='Verify Aadhaar first';
+    if(!state.firstName.trim())e.firstName='Required';
+    if(!state.lastName.trim())e.lastName='Required';
+    if(!state.dob)e.dob='Required';
+    if(!state.gender)e.gender='Required';
+    if(!state.mobile.match(/^\d{10}$/))e.mobile='Enter 10-digit mobile number';
+    if(!state.email.match(/^[^@]+@[^@]+\.[^@]+$/))e.email='Enter valid email address';
+  }
+  if(s===2){
+    if(!state.address.trim())e.address='Required';
+    if(!state.city.trim())e.city='Required';
+    if(!state.state_.trim())e.state_='Required';
+    if(!state.pincode.match(/^\d{6}$/))e.pincode='Enter 6-digit PIN code';
+  }
+  if(s===3){
+    if(!state.empType)e.empType='Required';
+    if(!state.monthlyIncome)e.monthlyIncome='Required';
+    if(state.empType==='Salaried'&&!state.company.trim())e.company='Required';
+    if((state.empType==='Business'||state.empType==='Self-employed')&&!state.businessName.trim())e.businessName='Required';
+  }
+  if(s===4){
+    if(!state.loanAmount||state.loanAmount<50000)e.loanAmount='Minimum loan amount is ₹50,000';
+    if(!state.purpose.trim())e.purpose='Required';
+    if(state.loanType==='Home'&&!state.propType)e.propType='Required';
+  }
+  if(s===5){const req=state.loanType==='Business'?3:2;if(state.docs.length<req)e.docs=`Upload at least ${req} documents`;}
+  if(s===6){if(!state.sigData)e.sig='Please draw your signature above';}
+  if(s===7){
+    if(!state.consents.terms)e.terms='You must accept the terms to proceed';
+    if(!state.consents.bureau)e.bureau='Bureau consent is mandatory';
+  }
+  return e;
+}
+function goNext(){const e=validateStep(state.step);state.errors=e;if(Object.keys(e).length>0){render();showToast('Please fix errors before continuing');return;}if(state.step<7)state.step++;saveProgress();window.scrollTo(0,0);render();}
+function goBack(){if(state.step>0){state.step--;render();}}
+function goToStep(i){if(i<state.step){state.step=i;render();}}
+function simulateVerify(type){
+  if(type==='pan'){
+    if(!state.pan.match(/^[A-Z]{5}[0-9]{4}[A-Z]$/)){state.errors={...state.errors,pan:'Invalid PAN format'};render();return;}
+    state.panVerifying=true;render();
+    setTimeout(()=>{state.panVerifying=false;state.panVerified=true;showToast('PAN verified ✓');render();},1500);
+  }else{
+    if(!state.aadhaar.match(/^\d{12}$/)){state.errors={...state.errors,aadhaar:'Invalid Aadhaar'};render();return;}
+    state.aadhaarVerifying=true;render();
+    setTimeout(()=>{state.aadhaarVerifying=false;state.aadhaarVerified=true;showToast('Aadhaar verified ✓');render();},1800);
+  }
+}
+function handleFileUpload(files){
+  const allowed=['image/jpeg','image/png','application/pdf'];
+  Array.from(files).forEach(f=>{
+    if(!allowed.includes(f.type)){showToast('Only JPG, PNG, PDF allowed');return;}
+    if(f.size>5*1024*1024){showToast('File too large — max 5MB');return;}
+    const reader=new FileReader();
+    reader.onload=e=>{state.docs.push({name:f.name,size:f.size,type:f.type,url:f.type.startsWith('image/')?e.target.result:null,id:Date.now()+Math.random()});saveProgress();render();};
+    reader.readAsDataURL(f);
+  });
+}
+function removeDoc(id){state.docs=state.docs.filter(d=>d.id!==id);render();}
+function setupCanvas(){
+  sigCanvas=document.getElementById('sigCanvas');
+  if(!sigCanvas)return;
+  sigCtx=sigCanvas.getContext('2d');
+  sigCanvas.width=sigCanvas.offsetWidth||620;
+  sigCanvas.height=160;
+  if(state.sigData){const img=new Image();img.onload=()=>sigCtx.drawImage(img,0,0);img.src=state.sigData;}
+  const startDraw=(x,y)=>{drawing=true;sigCtx.beginPath();sigCtx.moveTo(x,y);sigCtx.strokeStyle=state.sigColor;sigCtx.lineWidth=state.sigSize;sigCtx.lineCap='round';sigCtx.lineJoin='round';};
+  const draw=(x,y)=>{if(!drawing)return;sigCtx.lineTo(x,y);sigCtx.stroke();};
+  const stop=()=>{if(drawing){drawing=false;state.sigData=sigCanvas.toDataURL();saveProgress();}};
+  sigCanvas.onmousedown=e=>{const r=sigCanvas.getBoundingClientRect();startDraw(e.clientX-r.left,e.clientY-r.top);};
+  sigCanvas.onmousemove=e=>{if(!drawing)return;const r=sigCanvas.getBoundingClientRect();draw(e.clientX-r.left,e.clientY-r.top);};
+  sigCanvas.onmouseup=stop;sigCanvas.onmouseleave=stop;
+  sigCanvas.ontouchstart=e=>{e.preventDefault();const r=sigCanvas.getBoundingClientRect(),t=e.touches[0];startDraw(t.clientX-r.left,t.clientY-r.top);};
+  sigCanvas.ontouchmove=e=>{e.preventDefault();const r=sigCanvas.getBoundingClientRect(),t=e.touches[0];draw(t.clientX-r.left,t.clientY-r.top);};
+  sigCanvas.ontouchend=stop;
+}
+function clearSig(){if(sigCtx){sigCtx.clearRect(0,0,sigCanvas.width,sigCanvas.height);state.sigData='';render();}}
+function addrInput(val){
+  state.address=val;
+  if(val.length>2){state.addrSuggestions=ADDRESSES.filter(a=>a.toLowerCase().includes(val.toLowerCase())).slice(0,4);state.showAddrSug=true;}
+  else{state.showAddrSug=false;}
+  render();
+}
+function selectAddr(a){
+  state.address=a;
+  const parts=a.split(', ');
+  if(parts.length>=3){state.city=parts[parts.length-2].split(' ')[0];const sp=parts[parts.length-1].split(' ');state.state_=sp[0]||'';state.pincode=sp[1]||'';}
+  state.showAddrSug=false;render();
+}
+function getApproval(){
+  const income=Number(state.monthlyIncome)||0,loan=Number(state.loanAmount)||0;
+  const foir=calcEMI(loan,emiRate(),state.tenure)/income;
+  return(foir<0.5&&income>25000&&state.panVerified&&state.aadhaarVerified)?'approved':'review';
+}
+function field(id,label,type,val,placeholder,required,extraAttrs=''){
+  const err=state.errors[id];
+  return `<div class="field"><label for="${id}">${label}${required?'<span class="req">*</span>':''}</label><input type="${type}" id="${id}" value="${esc(val)}" placeholder="${placeholder}" oninput="state.${id}=this.value;saveProgress();render()" class="${err?'err':''}" ${extraAttrs} />${err?`<span class="err-msg">${err}</span>`:''}</div>`;
+}
+function selectField(id,label,val,options,required){
+  const err=state.errors[id];
+  return `<div class="field"><label for="${id}">${label}${required?'<span class="req">*</span>':''}</label><select id="${id}" class="${err?'err':''}" onchange="state.${id}=this.value;saveProgress();render()"><option value="">Select...</option>${options.map(o=>`<option value="${o}" ${val===o?'selected':''}>${o}</option>`).join('')}</select>${err?`<span class="err-msg">${err}</span>`:''}</div>`;
+}
+function renderLoanType(){
+  const types=[{id:'Personal',icon:'👤',desc:'Instant cash for any personal need'},{id:'Home',icon:'🏠',desc:'Buy or construct your dream home'},{id:'Business',icon:'💼',desc:'Fuel your business growth'}];
+  return `<div class="card"><div class="card-title">Choose your loan type</div><div class="card-sub">We'll customize the application based on your selection</div><div class="loan-type-grid">${types.map(t=>`<div class="loan-card ${state.loanType===t.id?'selected':''}" onclick="state.loanType='${t.id}';state.errors={};saveProgress();render()"><div class="lc-icon">${t.icon}</div><div class="lc-name">${t.id} Loan</div><div class="lc-desc">${t.desc}</div>${state.loanType===t.id?'<div class="badge badge-blue" style="margin-top:6px">Selected</div>':''}</div>`).join('')}</div>${state.errors.loanType?`<div class="err-msg">${state.errors.loanType}</div>`:''}${state.loanType?`<div class="tag-list" style="margin-top:12px"><div class="tag">Up to ${state.loanType==='Home'?'₹5 Crore':state.loanType==='Business'?'₹2 Crore':'₹50 Lakh'}</div><div class="tag">Rate from ${emiRate()}% p.a.</div><div class="tag">Tenure up to ${state.loanType==='Home'?'30 yrs':state.loanType==='Business'?'10 yrs':'7 yrs'}</div></div>`:''}</div>`;
+}
+function renderPersonal(){
+  return `<div class="card"><div class="card-title">Identity & contact details</div><div class="card-sub">Your documents will be verified via DigiLocker API (simulated)</div><div class="row row-2"><div class="field"><label>PAN Number<span class="req">*</span></label><div class="verify-row"><input type="text" value="${esc(state.pan)}" placeholder="ABCDE1234F" maxlength="10" oninput="state.pan=this.value.toUpperCase();state.panVerified=false;render()" class="${state.errors.pan||state.errors.panV?'err':''}" style="text-transform:uppercase" /><button class="btn-verify ${state.panVerifying?'loading':''}" onclick="simulateVerify('pan')" ${state.panVerifying||state.panVerified?'disabled':''}>${state.panVerifying?'<span class="spinner"></span>':state.panVerified?'✓ Done':'Verify'}</button></div>${state.errors.pan?`<span class="err-msg">${state.errors.pan}</span>`:''}${state.errors.panV?`<span class="err-msg">${state.errors.panV}</span>`:''}${state.panVerified?`<span class="ok-msg">✓ PAN verified</span>`:''}</div><div class="field"><label>Aadhaar Number<span class="req">*</span></label><div class="verify-row"><input type="text" value="${esc(state.aadhaar)}" placeholder="xxxxxxxxxxxx" maxlength="12" oninput="state.aadhaar=this.value.replace(/\D/g,'');state.aadhaarVerified=false;render()" class="${state.errors.aadhaar||state.errors.aadhaarV?'err':''}" /><button class="btn-verify ${state.aadhaarVerifying?'loading':''}" onclick="simulateVerify('aadhaar')" ${state.aadhaarVerifying||state.aadhaarVerified?'disabled':''}>${state.aadhaarVerifying?'<span class="spinner"></span>':state.aadhaarVerified?'✓ Done':'Verify'}</button></div>${state.errors.aadhaar?`<span class="err-msg">${state.errors.aadhaar}</span>`:''}${state.errors.aadhaarV?`<span class="err-msg">${state.errors.aadhaarV}</span>`:''}${state.aadhaarVerified?`<span class="ok-msg">✓ Aadhaar verified</span>`:''}</div></div><div class="divider"></div><div class="row row-2">${field('firstName','First name','text',state.firstName,'Priya',true)}${field('lastName','Last name','text',state.lastName,'Sharma',true)}</div><div class="row row-3">${field('dob','Date of birth','date',state.dob,'',true,'max="'+new Date(Date.now()-18*365*86400000).toISOString().split("T")[0]+'"')}${selectField('gender','Gender',state.gender,['Male','Female','Other','Prefer not to say'],true)}${field('mobile','Mobile','tel',state.mobile,'10-digit number',true,'maxlength="10"')}</div>${field('email','Email address','email',state.email,'you@example.com',true)}</div>`;
+}
+function renderAddress(){
+  return `<div class="card"><div class="card-title">Current address</div><div class="card-sub">Start typing to autocomplete your address</div><div class="field"><label>Street address<span class="req">*</span></label><div class="field-wrap"><input type="text" value="${esc(state.address)}" placeholder="Flat / House no, Street name..." oninput="addrInput(this.value)" class="${state.errors.address?'err':''}" />${state.showAddrSug&&state.addrSuggestions.length?`<div class="addr-suggest">${state.addrSuggestions.map(a=>`<div class="addr-item" onclick="selectAddr('${a.replace(/'/g,"\\'")}')">📍 ${a}</div>`).join('')}</div>`:''}</div>${state.errors.address?`<span class="err-msg">${state.errors.address}</span>`:''}</div><div class="row row-3">${field('city','City','text',state.city,'Kanpur',true)}${field('state_','State','text',state.state_,'UP',true)}${field('pincode','PIN code','text',state.pincode,'208001',true,'maxlength="6"')}</div><div class="divider"></div><div class="checkbox-row"><input type="checkbox" id="sameAddr" ${state.sameAddress?'checked':''} onchange="state.sameAddress=this.checked;render()"/><label for="sameAddr">Permanent address is same as current address</label></div>${!state.sameAddress?`<div class="field" style="margin-top:8px"><label>Permanent address<span class="req">*</span></label><textarea rows="3" placeholder="Enter permanent address..." oninput="state.permAddress=this.value;saveProgress();render()">${esc(state.permAddress)}</textarea></div>`:''}</div>`;
+}
+function renderEmployment(){
+  const isSalaried=state.empType==='Salaried';
+  const isBusiness=state.empType==='Business'||state.empType==='Self-employed';
+  return `<div class="card"><div class="card-title">Employment & income</div><div class="card-sub">This determines your loan eligibility and interest rate</div><div class="row row-2">${selectField('empType','Employment type',state.empType,['Salaried','Self-employed','Business','Freelancer'],true)}${field('monthlyIncome','Monthly income (₹)','number',state.monthlyIncome,'e.g. 50000',true,'min="0"')}</div>${isSalaried?`<div class="row row-2">${field('company','Company name','text',state.company,'ABC Pvt Ltd',true)}${field('designation','Designation','text',state.designation,'Software Engineer',false)}</div><div class="row row-2">${selectField('experience','Work experience',state.experience,['Less than 1 year','1-3 years','3-5 years','5-10 years','10+ years'],false)}<div></div></div>`:''}${isBusiness?`<div class="row row-2">${field('businessName','Business name','text',state.businessName,'My Enterprise',true)}${selectField('businessType','Business type',state.businessType,['Proprietorship','Partnership','Pvt Ltd','LLP','Others'],false)}</div><div class="row row-2">${selectField('businessVintage','Business vintage',state.businessVintage,['Less than 1 yr','1-3 years','3-5 years','5+ years'],false)}${field('turnover','Annual turnover (₹)','number',state.turnover,'e.g. 1200000',false)}</div>`:''} ${state.monthlyIncome?`<div style="margin-top:8px;padding:10px 14px;background:var(--teal-light);border-radius:var(--radius);font-size:13px;color:var(--teal)">✓ Estimated max eligibility: ${fmt(Number(state.monthlyIncome)*60)} based on income</div>`:''}</div>`;
+}
+function renderLoanDetails(){
+  const isHome=state.loanType==='Home',isBiz=state.loanType==='Business';
+  const maxLoan=isHome?50000000:isBiz?20000000:5000000;
+  const maxTenure=isHome?360:isBiz?120:84;
+  const emi=calcEMI(state.loanAmount,emiRate(),state.tenure);
+  return `<div class="card"><div class="card-title">Loan configuration</div><div class="card-sub">Drag the sliders to set your preferred amount and tenure</div><div class="field" style="margin-bottom:1rem"><label>Loan amount<span class="req">*</span></label><div class="range-wrap"><input type="range" min="50000" max="${maxLoan}" step="10000" value="${state.loanAmount}" oninput="state.loanAmount=+this.value;render()" /><div class="range-val"><span>₹50K</span><span style="font-size:16px;font-weight:500;color:var(--blue)">${fmt(state.loanAmount)}</span><span>${isHome?'₹5Cr':isBiz?'₹2Cr':'₹50L'}</span></div></div></div><div class="field" style="margin-bottom:1rem"><label>Tenure</label><div class="range-wrap"><input type="range" min="12" max="${maxTenure}" step="12" value="${state.tenure}" oninput="state.tenure=+this.value;render()" /><div class="range-val"><span>12 mo</span><span style="font-size:16px;font-weight:500;color:var(--blue)">${state.tenure} months (${Math.round(state.tenure/12*10)/10} yrs)</span><span>${maxTenure} mo</span></div></div></div><div class="emi-box"><div class="emi-amt">${fmt(emi)}/mo</div><div class="emi-label">Estimated EMI at ${emiRate()}% p.a. (reducing balance)</div></div><div class="summary-grid" style="margin-top:0"><div class="sum-item"><div class="si-label">Total amount payable</div><div class="si-val">${fmt(emi*state.tenure)}</div></div><div class="sum-item"><div class="si-label">Total interest</div><div class="si-val">${fmt(emi*state.tenure-state.loanAmount)}</div></div></div>${isHome?`<div class="divider"></div><div class="row row-2">${field('propValue','Property value (₹)','number',state.propValue,'e.g. 8000000',false)}${selectField('propType','Property type',state.propType,['Flat/Apartment','Independent House','Plot','Under Construction'],true)}</div>`:''}${isBiz?`<div class="divider"></div><div class="field"><label>Loan purpose<span class="req">*</span></label><div class="tag-list">${['Working capital','Equipment purchase','Business expansion','Trade finance','Others'].map(p=>`<div class="tag" style="cursor:pointer;${state.purpose===p?'background:var(--blue-light);color:var(--blue);':''}" onclick="state.purpose='${p}';render()">${p}</div>`).join('')}</div>${state.errors.purpose?`<div class="err-msg" style="margin-top:4px">${state.errors.purpose}</div>`:''}</div>`:`<div class="field" style="margin-top:12px"><label>Purpose<span class="req">*</span></label><input type="text" value="${esc(state.purpose)}" placeholder="${isHome?'Buy new flat, refinancing...':'Medical expenses, travel, education...'}" oninput="state.purpose=this.value;render()" class="${state.errors.purpose?'err':''}" />${state.errors.purpose?`<span class="err-msg">${state.errors.purpose}</span>`:''}</div>`}</div>`;
+}
+function renderDocuments(){
+  const isBiz=state.loanType==='Business';
+  const docTypes={Personal:['PAN Card','Aadhaar Card','Salary slip (last 3 months)','Bank statement (6 months)'],Home:['PAN Card','Aadhaar Card','Salary slip / ITR','Property documents','Bank statement (12 months)'],Business:['PAN Card','Aadhaar Card','GST certificate','ITR (last 2 years)','Balance sheet','Bank statement (12 months)']};
+  const required=isBiz?3:2;
+  return `<div class="card"><div class="card-title">Supporting documents</div><div class="card-sub">Upload ${required}+ documents. JPG, PNG or PDF · max 5MB each</div><div style="margin-bottom:12px"><div style="font-size:12px;color:#666;margin-bottom:6px">Required for ${state.loanType} loan:</div><div class="tag-list">${(docTypes[state.loanType]||[]).map(d=>`<div class="tag">${d}</div>`).join('')}</div></div><div class="upload-zone" id="dropzone" ondragover="event.preventDefault();this.classList.add('drag')" ondragleave="this.classList.remove('drag')" ondrop="event.preventDefault();this.classList.remove('drag');handleFileUpload(event.dataTransfer.files)"><input type="file" multiple accept=".jpg,.jpeg,.png,.pdf" onchange="handleFileUpload(this.files)" /><div class="uz-icon">📎</div><div style="font-size:14px;font-weight:500;margin-top:4px">Drop files here or click to browse</div><p>Supports JPG, PNG, PDF</p></div>${state.errors.docs?`<div class="err-msg" style="margin-top:6px">${state.errors.docs}</div>`:''}${state.docs.length?`<div class="doc-list">${state.docs.map(d=>`<div class="doc-item">${d.url?`<img src="${d.url}" alt="${esc(d.name)}" />`:`<div style="width:36px;height:36px;background:var(--blue-light);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:18px">📄</div>`}<div class="di-info"><div class="di-name">${esc(d.name)}</div><div class="di-size">${(d.size/1024).toFixed(1)} KB &nbsp;·&nbsp; <span class="badge badge-green">Uploaded</span></div></div><button class="di-del" onclick="removeDoc(${d.id})" title="Remove">✕</button></div>`).join('')}</div>`:''}</div>`;
+}
+function renderSignature(){
+  return `<div class="card"><div class="card-title">Digital signature</div><div class="card-sub">Draw your signature using mouse or touch. This serves as your digital consent.</div><canvas id="sigCanvas" class="sig-area" width="620" height="160" style="width:100%;height:160px"></canvas>${state.errors.sig?`<div class="err-msg" style="margin-top:4px">${state.errors.sig}</div>`:''}<div class="sig-toolbar"><button class="sig-btn" onclick="clearSig()">Clear</button><span style="font-size:12px;color:#666">Ink color:</span>${['#185FA5','#1a1a1a','#3B6D11','#A32D2D'].map(c=>`<div class="color-dot ${state.sigColor===c?'active':''}" style="background:${c}" onclick="state.sigColor='${c}';setupCanvas()" title="${c}"></div>`).join('')}<span style="font-size:12px;color:#666">Thickness:</span>${[1,2,4].map(s=>`<button class="sig-btn" onclick="state.sigSize=${s};setupCanvas()" style="${state.sigSize===s?'border-color:var(--blue);color:var(--blue)':''}">${s===1?'Thin':s===2?'Medium':'Thick'}</button>`).join('')}</div>${state.sigData?`<div class="ok-msg" style="margin-top:8px">✓ Signature captured</div>`:`<p style="font-size:12px;color:#999;margin-top:8px">Draw your signature in the box above</p>`}</div>`;
+}
+function renderReview(){
+  const approval=getApproval(),emi=calcEMI(state.loanAmount,emiRate(),state.tenure);
+  return `<div>${approval==='approved'?`<div class="approval-banner approved"><div class="ab-icon">✅</div><div class="ab-text"><h3>Pre-approved!</h3><p>Based on your profile, you're likely to be approved. Final decision after KYC verification.</p></div></div>`:`<div class="approval-banner review"><div class="ab-icon">⏳</div><div class="ab-text"><h3>Application under review</h3><p>Your application will be reviewed by our team within 24–48 hours.</p></div></div>`}<div class="card"><div class="card-title">Application summary</div><div class="card-sub">${state.loanType} Loan · Ref: LS${Date.now().toString().slice(-8)}</div><div class="summary-grid"><div class="sum-item"><div class="si-label">Loan amount</div><div class="si-val">${fmt(state.loanAmount)}</div></div><div class="sum-item"><div class="si-label">Tenure</div><div class="si-val">${state.tenure} months</div></div><div class="sum-item"><div class="si-label">Interest rate</div><div class="si-val">${emiRate()}% p.a.</div></div><div class="sum-item"><div class="si-label">Monthly EMI</div><div class="si-val" style="color:var(--blue)">${fmt(emi)}</div></div><div class="sum-item"><div class="si-label">Applicant</div><div class="si-val">${esc(state.firstName)} ${esc(state.lastName)}</div></div><div class="sum-item"><div class="si-label">Mobile</div><div class="si-val">${esc(state.mobile)}</div></div><div class="sum-item"><div class="si-label">Employment</div><div class="si-val">${esc(state.empType)}</div></div><div class="sum-item"><div class="si-label">Documents</div><div class="si-val">${state.docs.length} uploaded</div></div></div>${state.sigData?`<div style="margin-top:12px;padding:10px;border:0.5px solid #eee;border-radius:var(--radius)"><div style="font-size:12px;color:#666;margin-bottom:6px">Your signature:</div><img src="${state.sigData}" alt="Signature" style="max-height:60px;display:block" /></div>`:''}</div><div class="card"><div class="card-title" style="margin-bottom:10px">Consents & declarations</div><div class="checkbox-row"><input type="checkbox" id="c1" ${state.consents.terms?'checked':''} onchange="state.consents.terms=this.checked;render()"/><label for="c1">I have read and agree to the Terms & Conditions and Privacy Policy of LendSwift</label></div>${state.errors.terms?`<div class="err-msg" style="margin:0 0 8px 26px">${state.errors.terms}</div>`:''}<div class="checkbox-row"><input type="checkbox" id="c2" ${state.consents.bureau?'checked':''} onchange="state.consents.bureau=this.checked;render()"/><label for="c2">I authorize LendSwift to access my credit bureau report (CIBIL / Experian) for evaluation</label></div>${state.errors.bureau?`<div class="err-msg" style="margin:0 0 8px 26px">${state.errors.bureau}</div>`:''}<div class="checkbox-row"><input type="checkbox" id="c3" ${state.consents.comm?'checked':''} onchange="state.consents.comm=this.checked;render()"/><label for="c3">I consent to receive updates via SMS / email / WhatsApp regarding my application</label></div></div></div>`;
+}
+function render(){
+  const pct=Math.round((state.step/(STEPS.length-1))*100);
+  const savedStr=state.savedAt?`Saved at ${state.savedAt.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}`:'Not saved yet';
+  document.getElementById('root').innerHTML=`<div class="header"><div class="logo">L</div><div><h1>LendSwift — ${state.loanType||'Loan'} Application</h1><p>Step ${state.step+1} of ${STEPS.length}: ${STEPS[state.step].label}</p></div></div><div class="autosave-bar"><div class="autosave-dot ${state.saving?'saving':''}"></div>${state.saving?'Saving…':savedStr}${state.step>0?`<span style="margin-left:auto;font-size:11px;background:var(--gray-light);padding:2px 8px;border-radius:12px">${state.loanType} Loan</span>`:''}</div><div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div><div class="stepper">${STEPS.map((s,i)=>`<div class="step-item"><div class="step-col"><div class="step-circle ${i===state.step?'active':i<state.step?'done':''}" onclick="goToStep(${i})" title="${s.label}">${i<state.step?'✓':i+1}</div><div class="step-label ${i===state.step?'active':i<state.step?'done':''}">${s.label}</div></div>${i<STEPS.length-1?`<div class="step-line ${i<state.step?'done':''}"></div>`:''}</div>`).join('')}</div>${renderStep()}${state.submitted?'':`<div class="nav-bar">${state.step>0?`<button class="btn-back" onclick="goBack()">← Back</button>`:`<div></div>`}${state.step<7?`<button class="btn-next" onclick="goNext()">Continue →</button>`:`<button class="btn-submit" onclick="submitApp()">Submit Application 🚀</button>`}</div>`}`;
+  if(state.step===6)setTimeout(setupCanvas,50);
+}
+function renderStep(){const s=state.step;if(s===0)return renderLoanType();if(s===1)return renderPersonal();if(s===2)return renderAddress();if(s===3)return renderEmployment();if(s===4)return renderLoanDetails();if(s===5)return renderDocuments();if(s===6)return renderSignature();if(s===7)return renderReview();return '';}
+function submitApp(){
+  const e=validateStep(7);state.errors=e;
+  if(Object.keys(e).length>0){render();showToast('Please accept required consents');return;}
+  state.submitted=true;
+  document.getElementById('root').innerHTML=`<div style="text-align:center;padding:3rem 1rem"><div style="font-size:56px;margin-bottom:1rem">🎉</div><h2 style="font-size:22px;font-weight:500;margin-bottom:8px">Application submitted!</h2><p style="color:#666;margin-bottom:1.5rem">Your ${state.loanType} loan application for ${fmt(state.loanAmount)} has been received.</p><div style="display:inline-block;padding:10px 20px;background:var(--blue-light);border-radius:var(--radius-lg);margin-bottom:1.5rem"><div style="font-size:12px;color:#666">Application Reference</div><div style="font-size:20px;font-weight:500;color:var(--blue);letter-spacing:2px">LS${Date.now().toString().slice(-8)}</div></div><div style="max-width:380px;margin:0 auto;padding:1rem;background:var(--green-light);border-radius:var(--radius-lg);font-size:13px;color:var(--teal)">Our team will contact you at <strong>${esc(state.mobile)}</strong> within 24 hours. Keep your original documents ready for final KYC verification.</div><div style="margin-top:1.5rem"><button class="btn-next" onclick="resetApp()">Start new application</button></div></div>`;
+}
+function resetApp(){state={step:0,loanType:'',pan:'',panVerified:false,aadhaar:'',aadhaarVerified:false,firstName:'',lastName:'',dob:'',gender:'',mobile:'',email:'',address:'',city:'',state_:'',pincode:'',sameAddress:true,permAddress:'',empType:'',company:'',designation:'',monthlyIncome:'',experience:'',businessName:'',businessType:'',businessVintage:'',turnover:'',propValue:'',propType:'',downPayment:'',loanAmount:500000,tenure:24,purpose:'',docs:[],sigData:'',consents:{terms:false,bureau:false,comm:false},savedAt:null,saving:false,addrSuggestions:[],showAddrSug:false,panVerifying:false,aadhaarVerifying:false,errors:{},submitted:false,sigColor:'#185FA5',sigSize:2};render();}
+render();
+</script>
+</body>
+</html>
