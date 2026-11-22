@@ -276,13 +276,16 @@ function renderReview(){
   const approval=getApproval(),emi=calcEMI(state.loanAmount,emiRate(),state.tenure);
   return `<div>${approval==='approved'?`<div class="approval-banner approved"><div class="ab-icon">✅</div><div class="ab-text"><h3>Pre-approved!</h3><p>Based on your profile, you're likely to be approved. Final decision after KYC verification.</p></div></div>`:`<div class="approval-banner review"><div class="ab-icon">⏳</div><div class="ab-text"><h3>Application under review</h3><p>Your application will be reviewed by our team within 24–48 hours.</p></div></div>`}<div class="card"><div class="card-title">Application summary</div><div class="card-sub">${state.loanType} Loan · Ref: LS${Date.now().toString().slice(-8)}</div><div class="summary-grid"><div class="sum-item"><div class="si-label">Loan amount</div><div class="si-val">${fmt(state.loanAmount)}</div></div><div class="sum-item"><div class="si-label">Tenure</div><div class="si-val">${state.tenure} months</div></div><div class="sum-item"><div class="si-label">Interest rate</div><div class="si-val">${emiRate()}% p.a.</div></div><div class="sum-item"><div class="si-label">Monthly EMI</div><div class="si-val" style="color:var(--blue)">${fmt(emi)}</div></div><div class="sum-item"><div class="si-label">Applicant</div><div class="si-val">${esc(state.firstName)} ${esc(state.lastName)}</div></div><div class="sum-item"><div class="si-label">Mobile</div><div class="si-val">${esc(state.mobile)}</div></div><div class="sum-item"><div class="si-label">Employment</div><div class="si-val">${esc(state.empType)}</div></div><div class="sum-item"><div class="si-label">Documents</div><div class="si-val">${state.docs.length} uploaded</div></div></div>${state.sigData?`<div style="margin-top:12px;padding:10px;border:0.5px solid #eee;border-radius:var(--radius)"><div style="font-size:12px;color:#666;margin-bottom:6px">Your signature:</div><img src="${state.sigData}" alt="Signature" style="max-height:60px;display:block" /></div>`:''}</div><div class="card"><div class="card-title" style="margin-bottom:10px">Consents & declarations</div><div class="checkbox-row"><input type="checkbox" id="c1" ${state.consents.terms?'checked':''} onchange="state.consents.terms=this.checked;render()"/><label for="c1">I have read and agree to the Terms & Conditions and Privacy Policy of LendSwift</label></div>${state.errors.terms?`<div class="err-msg" style="margin:0 0 8px 26px">${state.errors.terms}</div>`:''}<div class="checkbox-row"><input type="checkbox" id="c2" ${state.consents.bureau?'checked':''} onchange="state.consents.bureau=this.checked;render()"/><label for="c2">I authorize LendSwift to access my credit bureau report (CIBIL / Experian) for evaluation</label></div>${state.errors.bureau?`<div class="err-msg" style="margin:0 0 8px 26px">${state.errors.bureau}</div>`:''}<div class="checkbox-row"><input type="checkbox" id="c3" ${state.consents.comm?'checked':''} onchange="state.consents.comm=this.checked;render()"/><label for="c3">I consent to receive updates via SMS / email / WhatsApp regarding my application</label></div></div></div>`;
 }
+/* render(): rebuilds the page but keeps the cursor in the field being typed in.
+   This is the fix for "cursor jumps after every letter". */
 function render(){
   const root=document.getElementById('root');
   const a=document.activeElement;
-  let idx=-1,start=null,end=null;
+  let idx=-1,start=null,end=null,type='';
   const sel='input,textarea,select';
   if(a&&root.contains(a)&&a.matches(sel)&&a.type!=='file'){
     idx=Array.from(root.querySelectorAll(sel)).indexOf(a);
+    type=a.type;
     try{start=a.selectionStart;end=a.selectionEnd;}catch(e){}
   }
   renderInner();
@@ -290,7 +293,11 @@ function render(){
     const el=root.querySelectorAll(sel)[idx];
     if(el){
       el.focus();
-      if(start!==null){try{el.setSelectionRange(start,end);}catch(e){}}
+      if(start!==null){
+        try{el.setSelectionRange(start,end);}catch(e){}
+      }else if(type==='email'||type==='number'){
+        const v=el.value;el.value='';el.value=v; // moves the cursor to the end
+      }
     }
   }
 }
